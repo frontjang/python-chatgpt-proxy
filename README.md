@@ -8,10 +8,10 @@ headless browser, expose an OpenAI-compatible API, and surface a management UI.
 
 | Module  | Description |
 | ------- | ----------- |
-| `daemon.py` | Manages Playwright browser sessions and exposes an HTTP API on port 8090. |
-| `webui.py` | FastAPI-based management UI for creating and removing browser sessions (port 8091). |
-| `api.py` | OpenAI-compatible chat completions endpoint running on port 8001. |
-| `mcp.py` | Minimal Model Context Protocol websocket server listening on port 9000. |
+| `daemon.py` | Manages Playwright browser sessions and exposes an HTTP API (default port 8090). |
+| `webui.py` | FastAPI-based management UI for creating and removing browser sessions (default port 8091). |
+| `api.py` | OpenAI-compatible chat completions endpoint (default port 8001). |
+| `mcp.py` | Minimal Model Context Protocol websocket server (default port 9000). |
 | `cli.py` | Simple Typer CLI for creating sessions and sending chat requests. |
 | `main.py` | Supervisor CLI for starting/stopping the above services. |
 
@@ -82,3 +82,22 @@ python -m mcp
 
 The CLI entry points `chatgpt-proxy` and `chatgpt-proxy-cli` are registered via
 `pyproject.toml`.
+
+## Configuration
+
+Service ports and connection details are controlled through environment
+variables. A `.env` file is included with sensible defaults:
+
+```
+DAEMON_PORT=8090
+WEBUI_PORT=8091
+API_PORT=8001
+MCP_PORT=9000
+```
+
+Any values defined in the environment take precedence. The supervisor stores
+PID files and consolidated service logs under `~/.chatgpt-proxy` by default; you
+can override this path with the `CHATGPT_PROXY_RUNTIME` variable. Each managed
+service logs stdout and stderr to a file inside the runtime directory (for
+example `~/.chatgpt-proxy/logs/daemon.log`) so that startup issues and runtime
+errors are easy to inspect.

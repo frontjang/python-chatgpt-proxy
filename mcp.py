@@ -9,11 +9,20 @@ import httpx
 import websockets
 from websockets.server import WebSocketServerProtocol
 
-API_URL = "http://127.0.0.1:8001/v1/chat/completions"
+from settings import env_int, env_str, load_environment
+
+load_environment()
+
+API_BASE_URL = env_str("API_URL", "http://127.0.0.1:8001")
+API_COMPLETIONS_URL = env_str(
+    "API_COMPLETIONS_URL", f"{API_BASE_URL.rstrip('/')}/v1/chat/completions"
+)
+MCP_HOST = env_str("MCP_HOST", "0.0.0.0")
+MCP_PORT = env_int("MCP_PORT", 9000)
 
 
 class MCPServer:
-    def __init__(self, host: str = "0.0.0.0", port: int = 9000) -> None:
+    def __init__(self, host: str = MCP_HOST, port: int = MCP_PORT) -> None:
         self.host = host
         self.port = port
 
@@ -30,7 +39,7 @@ class MCPServer:
 
     async def _forward(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         async with httpx.AsyncClient() as client:
-            api_response = await client.post(API_URL, json=payload)
+            api_response = await client.post(API_COMPLETIONS_URL, json=payload)
             api_response.raise_for_status()
             return {"type": "response", "data": api_response.json()}
 

@@ -18,6 +18,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Iterable
 
+from settings import env_path, load_environment
+
+load_environment()
+
 SERVICE_DEFINITIONS: Dict[str, str] = {
     "daemon": "daemon",
     "webui": "webui",
@@ -33,6 +37,7 @@ class Service:
     name: str
     module: str
     pidfile: Path
+    logfile: Path
 
     def is_running(self) -> bool:
         if not self.pidfile.exists():
@@ -51,13 +56,18 @@ class Service:
         if self.is_running():
             print(f"{self.name} is already running")
             return
-        process = subprocess.Popen(
-            [sys.executable, "-m", self.module],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
+        self.logfile.parent.mkdir(parents=True, exist_ok=True)
+        env = os.environ.copy()
+        env.setdefault("PYTHONUNBUFFERED", "1")
+        with self.logfile.open("a", encoding="utf-8") as log_handle:
+            process = subprocess.Popen(
+                [sys.executable, "-m", self.module],
+                stdout=log_handle,
+                stderr=subprocess.STDOUT,
+                env=env,
+            )
         self.pidfile.write_text(str(process.pid))
-        print(f"Started {self.name} (pid={process.pid})")
+        print(f"Started {self.name} (pid={process.pid}) - logs: {self.logfile}")
 
     def stop(self) -> None:
         if not self.pidfile.exists():
@@ -95,9 +105,11 @@ class ServiceManager:
 
     def _load_services(self) -> None:
         self.runtime_dir.mkdir(parents=True, exist_ok=True)
+        log_dir = self.runtime_dir / "logs"
         for name, module in SERVICE_DEFINITIONS.items():
             pidfile = self.runtime_dir / f"{name}.pid"
-            self.services[name] = Service(name=name, module=module, pidfile=pidfile)
+            logfile = log_dir / f"{name}.log"
+            self.services[name] = Service(name=name, module=module, pidfile=pidfile, logfile=logfile)
 
     def _iter_services(self, names: Iterable[str] | None) -> Iterable[Service]:
         if not names:
@@ -132,7 +144,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("services", nargs="*", help="Services to target (default: all)")
     parser.add_argument(
         "--runtime-dir",
-        default=Path.home() / ".chatgpt-proxy",
+        default=env_path("CHATGPT_PROXY_RUNTIME", Path.home() / ".chatgpt-proxy"),
         type=Path,
         help="Directory for pid files",
     )

@@ -15,6 +15,8 @@ from typing import Dict, Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from settings import env_int, env_str, load_environment
+
 try:  # pragma: no cover - optional dependency
     from playwright.async_api import Browser, BrowserContext, async_playwright
 except Exception:  # pragma: no cover - optional dependency
@@ -22,6 +24,11 @@ except Exception:  # pragma: no cover - optional dependency
     async_playwright = None
 
 LOGGER = logging.getLogger("daemon")
+
+load_environment()
+
+DAEMON_HOST = env_str("DAEMON_HOST", "0.0.0.0")
+DAEMON_PORT = env_int("DAEMON_PORT", 8090)
 
 
 @dataclass
@@ -144,7 +151,8 @@ async def list_sessions() -> Dict[str, Dict[str, str]]:
 def run() -> None:
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8090)
+    logging.basicConfig(level=logging.INFO)
+    uvicorn.run(app, host=DAEMON_HOST, port=DAEMON_PORT)
 
 
 if __name__ == "__main__":  # pragma: no cover

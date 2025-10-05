@@ -7,7 +7,14 @@ from typing import Dict, List
 from fastapi import FastAPI
 from pydantic import BaseModel
 
+from settings import env_int, env_str, load_environment
+
 app = FastAPI(title="python-chatgpt-proxy API")
+
+load_environment()
+
+API_HOST = env_str("API_HOST", "0.0.0.0")
+API_PORT = env_int("API_PORT", 8001)
 
 
 @dataclass
@@ -71,7 +78,7 @@ async def chat(request: ChatRequest) -> ChatResponse:
 def run() -> None:
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host=API_HOST, port=API_PORT)
 
 
 if __name__ == "__main__":  # pragma: no cover

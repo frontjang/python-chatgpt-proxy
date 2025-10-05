@@ -7,7 +7,13 @@ import httpx
 from fastapi import FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 
-DAEMON_URL = "http://127.0.0.1:8090"
+from settings import env_int, env_str, load_environment
+
+load_environment()
+
+DAEMON_URL = env_str("DAEMON_URL", "http://127.0.0.1:8090")
+WEBUI_HOST = env_str("WEBUI_HOST", "0.0.0.0")
+WEBUI_PORT = env_int("WEBUI_PORT", 8091)
 
 app = FastAPI(title="python-chatgpt-proxy webui")
 
@@ -103,7 +109,7 @@ async def session_proxy(websocket: WebSocket, session_id: str) -> None:
 def run() -> None:
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8091)
+    uvicorn.run(app, host=WEBUI_HOST, port=WEBUI_PORT)
 
 
 if __name__ == "__main__":  # pragma: no cover

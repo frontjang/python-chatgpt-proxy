@@ -5,8 +5,12 @@ import json
 import requests
 import typer
 
-DAEMON_URL = "http://127.0.0.1:8090"
-API_URL = "http://127.0.0.1:8001"
+from settings import env_str, load_environment
+
+load_environment()
+
+DAEMON_URL = env_str("DAEMON_URL", "http://127.0.0.1:8090")
+API_URL = env_str("API_URL", "http://127.0.0.1:8001")
 
 app = typer.Typer(add_completion=False, help="Test CLI for python-chatgpt-proxy")
 
