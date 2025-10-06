@@ -1,0 +1,26 @@
+[project]
+name = "python-chatgpt-proxy"
+version = "0.1.0"
+description = "Headless browser relay and OpenAI-compatible proxy for ChatGPT"
+authors = [{ name = "Generated" }]
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "httpx>=0.27",
+    "websockets>=11.0",
+    "typer>=0.9",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+playwright = ["playwright>=1.41"]
+
+[project.scripts]
+chatgpt-proxy = "main:entrypoint"
+chatgpt-proxy-cli = "cli:entrypoint"
+
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
